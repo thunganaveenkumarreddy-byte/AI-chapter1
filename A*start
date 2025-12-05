@@ -1,0 +1,63 @@
+import heapq
+from itertools import count
+
+start = {'A': [3,2,1], 'B': [], 'C': []}
+goal  = {'A': [], 'B': [], 'C': [3,2,1]}
+
+counter = count()
+
+def clone(state):
+    return {k: v[:] for k, v in state.items()}
+
+def get_state_tuple(state):
+    return (tuple(state['A']), tuple(state['B']), tuple(state['C']))
+
+def heuristic(state):
+    # number of disks not yet on final peg C
+    return len(state['A']) + len(state['B'])
+
+def a_star_hanoi():
+    pq = []
+    heapq.heappush(pq, (0 + heuristic(start), next(counter), start, []))
+    visited = set()
+
+    while pq:
+        f, _, state, path = heapq.heappop(pq)
+        t = get_state_tuple(state)
+
+        if t in visited:
+            continue
+        visited.add(t)
+
+        if t == get_state_tuple(goal):
+            return path
+
+        for s in 'ABC':
+            if not state[s]:
+                continue
+
+            disk = state[s][-1]
+
+            for d in 'ABC':
+                if s == d:
+                    continue
+                if state[d] and state[d][-1] < disk:
+                    continue
+
+                new_state = clone(state)
+                new_state[s].pop()
+                new_state[d].append(disk)
+                new_path = path + [f"{disk}: {s} → {d}"]
+
+                g = len(new_path)
+                h = heuristic(new_state)
+                f_new = g + h
+
+                heapq.heappush(pq, (f_new, next(counter), new_state, new_path))
+
+    return None
+
+astar_solution = a_star_hanoi()
+print("\nA* Solution:")
+for i, move in enumerate(astar_solution, 1):
+    print(i, move)
